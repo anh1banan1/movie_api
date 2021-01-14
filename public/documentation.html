@@ -3,10 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Documentation</title>
 </head>
 <body>
-    <h1>myFlix</h1>
-    <p>Your source to all the movie info you ever wanted! Use the search bar to find anything movie related, from actor name to release dates.</p>
+    <header>
+        <h1>myFlix</h1>
+        <p>Your source to all the movie info you ever wanted! Use the search bar to find anything movie related, from actor name to release dates.</p>
+    </header>
+
+    <div>
+        <table>
+            <tr>
+              <th>Business Logic</th>
+              <th>URL Endpoint</th>
+              <th>HTTP Method</th>
+              <th>Request body data format </th>
+              <th>Response body data format</th>
+            </tr>
+            <tr>
+                <td>Get a list of all movies</td>
+                <td>/movies</td>
+                <td>GET</td>
+                <td>None</td>
+                <td>A JSON object holding data about all movies
+                </td>
+            </tr>
+            <tr>
+                <td>Get information about one specific movie by title</td>
+                <td>/movies/:Title</td>
+                <td>GET</td>
+                <td>None</td>
+                <td>A JSON object holding data about a specific movie, containing description, genre, director, image URL, whether it’s featured or not
+                    <br>Example:
+                    <br>
+                    {
+                        <br>Title: "Joker",
+                        <br>Description: "Arthur Fleck, a party clown, leads an impoverished life with his ailing mother. However, when society shuns him and brands him as a freak, he decides to embrace the life of crime and chaos.",
+                        <br>Genre: "Thriller",
+                        <br>Director: "Todd Phillips",
+                        <br>Image: "joker.png",
+                        <br>Featured: true
+                        <br>
+                    }
+                </td>
+            <tr>
+                <td>Return data about genre of a movie by its title</td>
+                <td>/movies/Genres/:Title</td>
+                <td>GET</td>
+                <td>None</td>
+                <td>A JSON object holding data about the genre of a title
+                    <br>Example:
+                    <br>
+                    {
+                        <br>Genre: "Thriller",
+                        <br>Description: "Thriller is a genre of fiction, having numerous, often overlapping subgenres. Thrillers are characterized and defined by the moods they elicit, giving viewers heightened feelings of suspense, excitement, surprise, anticipation and anxiety."
+                        <br>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Return data about a director by name</td>
+                <td>/movies/Directors/:Name</td>
+                <td>GET</td>
+                <td>None</td>
+                <td>A JSON object holding data about the director of a movie, containing bio, birth year, death year
+                    <br>Example:
+                    <br>
+                    {
+                        <br>Name: "Quentin Tarantino",
+                        <br>Bio: "Quentin Jerome Tarantino is an American film director, screenwriter, producer, and actor."
+                        <br>Birth year: "March 27, 1963"
+                        <br>Death year: ""
+                        <br>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Allow new users to register</td>
+                <td>/users</td>
+                <td>POST</td>
+                <td>A JSON object holding data of new user containing username, password, email, date of birth
+                    <br>Example:
+                    <br>
+                    {
+                        <br>Username: "anhibanani",
+                        <br>Password: "password1234",
+                        <br>Email: "anhibanani@email.com",
+                        <br>Date of birth: "01/01/2000"
+                        <br>
+                    }
+                </td>
+                <td>A JSON object holding data about the user that was added including an ID
+                    <br>Example:
+                    <br>
+                    {
+                        <br>ID: "123",
+                        <br>Username: "anhibanani",
+                        <br>Password: "password1234",
+                        <br>Email: "anhibanani@email.com",
+                        <br>Birthday: "01/01/2000"
+                        <br>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Allow users to update their user information</td>
+                <td>/users/:Username</td>
+                <td>PUT</td>
+                <td>A JSON object holding data containing the information to be updated
+                    <br>Example:
+                    <br>
+                    {
+                        <br>Username: "anhibanani",
+                        <br>Password: "123Password",
+                        <br>Email: "anhibanani@email.com",
+                        <br>Date of birth: "01/01/2000"
+                        <br>
+                    }
+                </td>
+                <td>A JSON object holding data of the updates
+                    <br>Example:
+                    <br>
+                    {
+                        <br>ID: "123",
+                        <br>Username: "anhibanani",
+                        <br>Password: "123Password",
+                        <br>Email: "anhibanani@email.com",
+                        <br>Birthday: "01/01/2000"
+                        <br>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Allow users to add a movie to their list of favorites</td>
+                <td>/users/:Username/movies/:Title</td>
+                <td>POST</td>
+                <td>None
+                    <br>Example:
+                    <br>/users/anhibanani/movies/LionKing
+                </td>
+                <td>A JSON object holding data containing movies added to the favorite movie list of the user
+                    <br>Example:
+                    <br>
+                    {
+                        <br>ID: "123",
+                        <br>Username: "anhibanani",
+                        <br>Password: "password1234",
+                        <br>Email: "anhibanani@email.com",
+                        <br>Birthday: "01/01/2000",
+                        <br>List: "Favorites",
+                        <br>Movie Title: "Lion King"
+                        <br>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Allow users to remove a movie from their list of favorites</td>
+                <td>/users/:Username/movies/:Title</td>
+                <td>DELETE</td>
+                <td>None
+                    <br>Example:
+                    <br>/users/anhibanani/movies/LionKing
+                </td>
+                <td>A text message indicating whether the movie was successfully removed</td>
+            </tr>
+            <tr>
+                <td>Allow existing users to deregister</td>
+                <td>/users/:Username</td>
+                <td>DELETE</td>
+                <td>None
+                    <br>Example:
+                    <br>/users/anhibanani
+                </td>
+                <td>A text message indicating whether the user was successfully deregistered</td>
+            </tr>
+        </table>
+    </div>
 </body>
 </html>

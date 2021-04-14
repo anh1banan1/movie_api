@@ -1,9 +1,11 @@
 const express = require('express'),
+    { check, validationResult } = require('express-validator'),
     bodyParser = require('body-parser'),
     morgan = require('morgan')
     mongoose = require('mongoose'),
     Models = require('./models.js'),
-    passport = require('passport');
+    passport = require('passport'),
+    cors = require('cors');
 require('./passport');
 
 const app = express();
@@ -21,6 +23,8 @@ app.use(morgan('common'));
 app.use(express.static('public'));
 
 app.use(bodyParser.json());
+
+app.use(cors());
 
 let auth = require('./auth')(app);
 
@@ -150,23 +154,38 @@ app.get('/users/:Username', passport.authenticate('jwt', {session: false}), (req
 });
 
 // Post new user registration
-app.post('/users', (req, res) => {
-    Users.findOne({Username: req.body.Username})
-    .then((user) => {
-        if (user) {
-            return res.status(400).send(req.body.Username + 'already exists');    
-        } else {
-            Users
-                .create({
-                    Username: req.body.Username,
-                    Password: req.body.Password,
-                    Email: req.body.Email,
-                    Birthday: req.body.Birthday
-                })
-                .then((user) =>{res.status(201).json(user)})
-            .catch((error) => {
-                console.error(error);
-                res.status(500).send('Error: ' + error);
+app.post('/users', [
+        check('Username', 'Username is required.').not().isEmpty(),
+        check('Username', 'Username must contain only alphanumeric characters.').isAlphanumeric(),
+        check('Password', 'Password is required.').not().isEmpty(),
+        check('Password', 'Password must be a minimum of 8 characters long').isLength({ min: 8 }),
+        check('Email', 'Email is not valid.').isEmail().normalizeEmail()
+    ], (req, res) => {
+        // Check validation object for errors
+        let errors = validationResult(req);
+
+        if (!error.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        let hashedPassword = Users.hashPassword(req.body.Password);
+
+        Users.findOne({Username: req.body.Username})
+        .then((user) => {
+            if (user) {
+                return res.status(400).send(req.body.Username + 'already exists');    
+            } else {
+                Users
+                    .create({
+                        Username: req.body.Username,
+                        Password: hashedPassword,
+                        Email: req.body.Email,
+                        Birthday: req.body.Birthday
+                    })
+                    .then((user) =>{res.status(201).json(user)})
+                .catch((error) => {
+                    console.error(error);
+                    res.status(500).send('Error: ' + error);
             })
         }
     })
@@ -177,25 +196,42 @@ app.post('/users', (req, res) => {
 });
 
 // Update a user's information, by username 
-app.put('/users/:Username', passport.authenticate('jwt', {session: false}), (req, res) => {
-    Users.findOneAndUpdate({ Username: req.params.Username }, {
-        $set:
-        {
-            Username: req.body.Username,
-            Password: req.body.Password,
-            Email: req.body.Email,
-            Birthday: req.body.Birthday
+app.put('/users/:Username', 
+    passport.authenticate('jwt', {session: false}),
+    [
+        check('Username', 'Username is required.').not().isEmpty(),
+        check('Username', 'Username must contain only alphanumeric characters.').isAlphanumeric(),
+        check('Password', 'Password is required.').not().isEmpty(),
+        check('Password', 'Password must be a minimum of 8 characters long').isLength({ min: 8 }),
+        check('Email', 'Email is not valid.').isEmail().normalizeEmail()
+    ], 
+    (req, res) => {
+        let errors = validationResult(req); 
+        // checks the validation object for errors
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
         }
-    },
-    { new: true }, // This line makes sure that the updated document is returned
-    (err, updatedUser) => {
-        if(err) {
-            console.error(err);
-            res.status(500).send('Error: ' + err);
-        } else {
-            res.json(updatedUser);
-        }
-    });
+
+        let hashedPassword = Users.hashPassword(req.body.Password);
+
+        Users.findOneAndUpdate({ Username: req.params.Username }, {
+            $set:
+            {
+                Username: req.body.Username,
+                Password: req.body.Password,
+                Email: req.body.Email,
+                Birthday: req.body.Birthday
+            }
+        },
+        { new: true }, // This line makes sure that the updated document is returned
+        (err, updatedUser) => {
+            if(err) {
+                console.error(err);
+                res.status(500).send('Error: ' + err);
+            } else {
+                res.json(updatedUser);
+            }
+        });
 });
 
 // Add a  movie to user's list of favorite movies
@@ -245,6 +281,7 @@ app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (
 });
 
 // listen for requests
-app.listen(8080, () =>
-    console.log('Your app is listening on port 8080.')
-);
+const port = process.env.PORT || 8080;
+app.listen(port, '0.0.0.0',() => {
+    console.log('Listening on Port ' + port);
+});

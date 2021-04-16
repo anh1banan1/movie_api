@@ -40,43 +40,43 @@ app.use((err, req, res, next) => {
     next();
   });
 
-let movies = [
-    {
-        title: 'The Greatest Showman',
-        description: 'P T Barnum becomes a worldwide sensation in the show business. His imagination and innovative ideas take him to the top of his game.',
-        genre: 'Drama',
-        director: 'Michael Gracey',
-        image: 'greatestShowman.png'
-    },
-    {
-        title: 'Crazy Rich Asians',
-        description: 'Rachel, a professor, dates a man named Nick and looks forward to meeting his family. However, she is shaken up when she learns that Nick belongs to one of the richest families in the country.',
-        genre: 'Romance',
-        director: 'Jon M. Chu',
-        image: 'crazyRichAsians.png'
-    },
-    {
-        title: 'Joker',
-        description: 'Arthur Fleck, a party clown, leads an impoverished life with his ailing mother. However, when society shuns him and brands him as a freak, he decides to embrace the life of crime and chaos.',
-        genre: 'Thriller',
-        director: 'Todd Phillips',
-        image: 'joker.png'
-    },
-    {
-        title: 'Knives Out',
-        description: 'The circumstances surrounding the death of crime novelist Harlan Thrombey are mysterious, but there is one thing that renowned Detective Benoit Blanc knows for sure - everyone in the wildly dysfunctional Thrombey family is a suspect.',
-        genre: 'Mystery',
-        director: 'Rian Johnson',
-        image: 'knivesOut.png'
-    },
-    {
-        title: 'The Great Gatsby',
-        description: 'Nick Carraway, a World War I veteran who moves to New York with the hope of making it big, finds himself attracted to Jay Gatsby and his flamboyant lifestyle.',
-        genre: 'Drama',
-        director: 'Baz Luhrmann',
-        image: 'greatGatsby.png'
-    }
-];
+// let movies = [
+//     {
+//         title: 'The Greatest Showman',
+//         description: 'P T Barnum becomes a worldwide sensation in the show business. His imagination and innovative ideas take him to the top of his game.',
+//         genre: 'Drama',
+//         director: 'Michael Gracey',
+//         image: 'greatestShowman.png'
+//     },
+//     {
+//         title: 'Crazy Rich Asians',
+//         description: 'Rachel, a professor, dates a man named Nick and looks forward to meeting his family. However, she is shaken up when she learns that Nick belongs to one of the richest families in the country.',
+//         genre: 'Romance',
+//         director: 'Jon M. Chu',
+//         image: 'crazyRichAsians.png'
+//     },
+//     {
+//         title: 'Joker',
+//         description: 'Arthur Fleck, a party clown, leads an impoverished life with his ailing mother. However, when society shuns him and brands him as a freak, he decides to embrace the life of crime and chaos.',
+//         genre: 'Thriller',
+//         director: 'Todd Phillips',
+//         image: 'joker.png'
+//     },
+//     {
+//         title: 'Knives Out',
+//         description: 'The circumstances surrounding the death of crime novelist Harlan Thrombey are mysterious, but there is one thing that renowned Detective Benoit Blanc knows for sure - everyone in the wildly dysfunctional Thrombey family is a suspect.',
+//         genre: 'Mystery',
+//         director: 'Rian Johnson',
+//         image: 'knivesOut.png'
+//     },
+//     {
+//         title: 'The Great Gatsby',
+//         description: 'Nick Carraway, a World War I veteran who moves to New York with the hope of making it big, finds himself attracted to Jay Gatsby and his flamboyant lifestyle.',
+//         genre: 'Drama',
+//         director: 'Baz Luhrmann',
+//         image: 'greatGatsby.png'
+//     }
+// ];
 
 // GET requests
 // define API endpoints
@@ -159,11 +159,11 @@ app.get('/users/:Username', passport.authenticate('jwt', {session: false}), (req
 
 // Post new user registration
 app.post('/users', [
-        check('Username', 'Username is required.').not().isEmpty(),
-        check('Username', 'Username must contain only alphanumeric characters.').isAlphanumeric(),
-        check('Password', 'Password is required.').not().isEmpty(),
-        check('Password', 'Password must be a minimum of 8 characters long').isLength({ min: 8 }),
-        check('Email', 'Email is not valid.').isEmail().normalizeEmail()
+    check('Username', 'Username is required').isLength({min:5}),
+    check('Username', 'Username is not allowed to contain non alphanumeric characters.').isAlphanumeric(),
+    check('Password', 'Password is required').not().isEmpty(),
+    check('Birthday', 'Birthday must be a date').isDate({format: 'YYYY-MM-DD'}),
+    check('Email', 'E-Mail does not appear to be valid').isEmail(),
     ], (req, res) => {
         // Check validation object for errors
         let errors = validationResult(req);
@@ -171,16 +171,15 @@ app.post('/users', [
         if (!error.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
-
+        
         let hashedPassword = Users.hashPassword(req.body.Password);
 
         Users.findOne({Username: req.body.Username})
         .then((user) => {
             if (user) {
-                return res.status(400).send(req.body.Username + 'already exists');    
+                return res.status(400).send(req.body.Username + ' already exists');    
             } else {
-                Users
-                    .create({
+                Users.create({
                         Username: req.body.Username,
                         Password: hashedPassword,
                         Email: req.body.Email,
@@ -190,7 +189,7 @@ app.post('/users', [
                 .catch((error) => {
                     console.error(error);
                     res.status(500).send('Error: ' + error);
-            })
+            });
         }
     })
     .catch((error) => {

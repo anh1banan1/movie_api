@@ -6,6 +6,11 @@ const express = require('express'),
     Models = require('./models.js'),
     passport = require('passport'),
     cors = require('cors');
+let allowedOrigins = [
+    "http://localhost:1234",
+    "https://mooflix.herokuapp.com/",
+    "http://localhost:8080",
+    ];
 require('./passport');
 
 const app = express();
@@ -86,7 +91,9 @@ app.get('/', (req, res) => {
 });
 
 // Get list of all movies
-app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) => {
+app.get('/movies', 
+passport.authenticate('jwt', { session: false }), 
+(req, res) => {
     Movies.find()
     .then((movies) => {
         res.status(201).json(movies);
@@ -96,6 +103,7 @@ app.get('/movies', passport.authenticate('jwt', { session: false }), (req, res) 
         res.status(500).send('Error: ' + err);
     });
 });
+
 
 // Get data about a movie by title
 app.get('/movies/:Title', passport.authenticate('jwt', {session: false}), (req, res) => {

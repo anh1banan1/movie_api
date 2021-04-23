@@ -1,27 +1,23 @@
-const express = require('express'),
-    { check, validationResult } = require('express-validator'),
-    bodyParser = require('body-parser'),
-    morgan = require('morgan')
-    mongoose = require('mongoose'),
-    Models = require('./models.js'),
-    passport = require('passport'),
-    cors = require('cors');
+const express = require('express');
+const { check, validationResult } = require('express-validator');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const mongoose = require('mongoose');
+const Models = require('./models.js');
+const passport = require('passport');
+require('./passport');
+const cors = require('cors');
 let allowedOrigins = [
     "http://localhost:1234",
     "https://mooflix.herokuapp.com/",
     "http://localhost:8080",
     ];
-require('./passport');
+
 
 const app = express();
 // import Models
 const Movies = Models.Movie;
 const Users = Models.User;
-
-// connect to local mongoDB
-// mongoose.connect('mongodb://localhost:27017/myFlixDB', {
-//     useNewUrlParser: true, useUnifiedTopology: true 
-// });
 
 mongoose.connect(process.env.CONNECTION_URI, {
     useNewUrlParser: true, useUnifiedTopology: true 
@@ -31,9 +27,22 @@ app.use(morgan('common'));
 
 app.use(express.static('public'));
 
+app.use(express.json());
 app.use(bodyParser.json());
 
-app.use(cors());
+app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        // If a specific origin isn’t found on the list of allowed origins
+        let message =
+          "The CORS policy for this application doesn’t allow access from origin " +
+          origin;
+        return callback(new Error(message), false);
+      }
+      return callback(null, true);
+    },
+  }));
 
 let auth = require('./auth')(app);
 
@@ -45,43 +54,6 @@ app.use((err, req, res, next) => {
     next();
   });
 
-// let movies = [
-//     {
-//         title: 'The Greatest Showman',
-//         description: 'P T Barnum becomes a worldwide sensation in the show business. His imagination and innovative ideas take him to the top of his game.',
-//         genre: 'Drama',
-//         director: 'Michael Gracey',
-//         image: 'greatestShowman.png'
-//     },
-//     {
-//         title: 'Crazy Rich Asians',
-//         description: 'Rachel, a professor, dates a man named Nick and looks forward to meeting his family. However, she is shaken up when she learns that Nick belongs to one of the richest families in the country.',
-//         genre: 'Romance',
-//         director: 'Jon M. Chu',
-//         image: 'crazyRichAsians.png'
-//     },
-//     {
-//         title: 'Joker',
-//         description: 'Arthur Fleck, a party clown, leads an impoverished life with his ailing mother. However, when society shuns him and brands him as a freak, he decides to embrace the life of crime and chaos.',
-//         genre: 'Thriller',
-//         director: 'Todd Phillips',
-//         image: 'joker.png'
-//     },
-//     {
-//         title: 'Knives Out',
-//         description: 'The circumstances surrounding the death of crime novelist Harlan Thrombey are mysterious, but there is one thing that renowned Detective Benoit Blanc knows for sure - everyone in the wildly dysfunctional Thrombey family is a suspect.',
-//         genre: 'Mystery',
-//         director: 'Rian Johnson',
-//         image: 'knivesOut.png'
-//     },
-//     {
-//         title: 'The Great Gatsby',
-//         description: 'Nick Carraway, a World War I veteran who moves to New York with the hope of making it big, finds himself attracted to Jay Gatsby and his flamboyant lifestyle.',
-//         genre: 'Drama',
-//         director: 'Baz Luhrmann',
-//         image: 'greatGatsby.png'
-//     }
-// ];
 
 // GET requests
 // define API endpoints
@@ -193,7 +165,9 @@ app.post('/users', [
                         Email: req.body.Email,
                         Birthday: req.body.Birthday
                     })
-                    .then((user) =>{res.status(201).json(user)})
+                    .then((user) => {
+                        res.status(201).json(user)
+                    })
                 .catch((error) => {
                     console.error(error);
                     res.status(500).send('Error: ' + error);
@@ -240,7 +214,7 @@ app.put('/users/:Username',
                 console.error(err);
                 res.status(500).send('Error: ' + err);
             } else {
-                res.json(updatedUser);
+                res.status(201).json(updatedUser);
             }
         });
 });
@@ -290,6 +264,11 @@ app.delete('/users/:Username', passport.authenticate('jwt', {session: false}), (
         res.status(500).send('Error: ' + err);
     });
 });
+
+//access documentation using express static
+app.get("/documentation", (req, res) => {
+    res.sendFile("public/documentation.html", { root: __dirname });
+  });
 
 // listen for requests
 const port = process.env.PORT || 8080;

@@ -8,9 +8,10 @@ const passport = require('passport');
 require('./passport');
 const cors = require('cors');
 let allowedOrigins = [
-    "http://localhost:1234",
+    "https://localhost:1234",
     "https://mooflix.herokuapp.com/",
     "http://localhost:8080",
+    "http://localhost:56580"
     ];
 
 
